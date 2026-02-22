@@ -1,0 +1,30 @@
+type Query {
+    products: [Product!]!
+    product(id: ID!): Product
+}
+
+type Mutation {
+    login(username: String!, password: String!): LoginResponse!
+    register(username: String!, password: String!): String!
+    
+    createProduct(input: ProductInput!): Product!
+    updateProduct(id: ID!, input: ProductInput!): Product!
+    deleteProduct(id: ID!): Boolean!
+}
+
+type Product {
+    id: ID!
+    name: String!
+    description: String
+    price: Float!
+}
+
+input ProductInput {
+    name: String!
+    description: String
+    price: Float!
+}
+
+type LoginResponse {
+    token: String!
+}
