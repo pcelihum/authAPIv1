@@ -1,15 +1,19 @@
 type Query {
     products: [Product!]!
     product(id: ID!): Product
+    ordersByUser(userId: ID!): [Order!]!
+    orderById(id: ID!): Order
 }
 
 type Mutation {
     login(username: String!, password: String!): LoginResponse!
     register(username: String!, password: String!): String!
-    
+
     createProduct(input: ProductInput!): Product!
     updateProduct(id: ID!, input: ProductInput!): Product!
     deleteProduct(id: ID!): Boolean!
+
+    createOrder(input: CreateOrderInput!): Order!
 }
 
 type Product {
@@ -27,4 +31,30 @@ input ProductInput {
 
 type LoginResponse {
     token: String!
+}
+
+input OrderItemInput {
+    productId: ID!
+    quantity: Int!
+}
+
+input CreateOrderInput {
+    userId: ID!
+    items: [OrderItemInput!]!
+}
+
+type OrderItem {
+    id: ID!
+    product: Product!
+    quantity: Int!
+    price: Float!
+}
+
+type Order {
+    id: ID!
+    userId: ID!
+    totalAmount: Float!
+    status: String!
+    createdAt: String!
+    items: [OrderItem!]!
 }
