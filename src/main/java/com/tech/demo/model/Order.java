@@ -23,7 +23,8 @@ public class Order {
 
     private BigDecimal totalAmount;
 
-    private String status; // CREATED, PAID, CANCELLED
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
 
     private LocalDateTime createdAt;
 
@@ -33,6 +34,6 @@ public class Order {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
-        this.status = "CREATED";
+        if (this.status == null) this.status = OrderStatus.CREATED;
     }
 }

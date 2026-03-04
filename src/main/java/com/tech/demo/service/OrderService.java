@@ -1,18 +1,15 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.orders.CreateOrderInput;
 import com.example.demo.dto.orders.OrderItemInput;
-import com.example.demo.model.Order;
-import com.example.demo.model.OrderItem;
-import com.example.demo.model.Product;
+import com.example.demo.model.*;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.ProductRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -26,21 +23,27 @@ public class OrderService {
     }
 
     @Transactional
-    public Order createOrder(CreateOrderInput input) {
-        Order order = new Order();
-        order.setUserId(input.getUserId());
+    public Order createOrder(Long userId, List<OrderItemInput> itemsInput) {
+        if (itemsInput == null || itemsInput.isEmpty()) {
+            throw new IllegalArgumentException("Order must have at least 1 item");
+        }
 
-        List<OrderItem> items = input.getItems().stream().map(itemInput -> {
+        Order order = new Order();
+        order.setUserId(userId);
+
+        List<OrderItem> items = itemsInput.stream().map(itemInput -> {
             Product product = productRepository.findById(itemInput.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + itemInput.getProductId()));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Product not found with id: " + itemInput.getProductId()));
 
             return OrderItem.builder()
                     .order(order)
                     .product(product)
                     .quantity(itemInput.getQuantity())
+                    // tu campo price es subtotal (unit * qty)
                     .price(product.getPrice().multiply(BigDecimal.valueOf(itemInput.getQuantity())))
                     .build();
-        }).collect(Collectors.toList());
+        }).toList();
 
         BigDecimal totalAmount = items.stream()
                 .map(OrderItem::getPrice)
@@ -59,5 +62,22 @@ public class OrderService {
     public Order getOrderById(Long id) {
         return orderRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found with id: " + id));
+    }
+
+    public Order getOrderByIdSecured(Long orderId, Long currentUserId, boolean isAdmin) {
+        Order order = getOrderById(orderId);
+
+        if (!isAdmin && !order.getUserId().equals(currentUserId)) {
+            throw new AccessDeniedException("Forbidden");
+        }
+
+        return order;
+    }
+
+    @Transactional
+    public Order updateOrderStatus(Long orderId, OrderStatus status) {
+        Order order = getOrderById(orderId);
+        order.setStatus(status);
+        return orderRepository.save(order);
     }
 }

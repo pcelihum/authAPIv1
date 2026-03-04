@@ -38,7 +38,9 @@ public class AuthResolver {
                 .toList();
 
         String token = jwtService.generateToken(result.getName(), roles);
-        return new LoginResponse(token);
+        Long userId = userService.getUserIdByUsername(result.getName());
+
+        return new LoginResponse(token, userId, roles);
     }
 
     @MutationMapping

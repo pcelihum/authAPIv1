@@ -41,4 +41,10 @@ public class UserService {
                 .map(User::getUsername)
                 .collect(Collectors.toList());
     }
+
+    public Long getUserIdByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username))
+                .getId();
+    }
 }
